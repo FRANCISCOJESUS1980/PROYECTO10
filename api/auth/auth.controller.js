@@ -1,61 +1,40 @@
 const User = require('../../models/User')
-const bcrypt = require('bcryptjs')
+const bcrypt = require('bcrypt')
+const { generateToken } = require('../../utils/tokenUtils')
 
-const registerUser = async (req, res) => {
-  const { name, email, password } = req.body
-
-  console.log('Datos recibidos para registro:', req.body)
-
-  if (!name || !email || !password) {
-    return res.status(400).json({ message: 'Todos los campos son requeridos' })
-  }
-
+const register = async (req, res) => {
+  const { username, email, password } = req.body
   try {
-    const userExists = await User.findOne({ email })
-    if (userExists) {
-      console.log('El usuario ya existe:', email)
-      return res.status(400).json({ message: 'El usuario ya existe' })
-    }
+    const hashedPassword = await bcrypt.hash(password, 10)
 
-    const user = new User({ name, email, password })
-    await user.save()
+    const newUser = new User({ username, email, password: hashedPassword })
+    await newUser.save()
 
-    console.log('Usuario registrado exitosamente:', user)
-    res.status(201).json({ message: 'Usuario registrado exitosamente' })
+    const token = generateToken(newUser._id)
+
+    res.status(201).json({ message: 'Usuario creado y autenticado', token })
   } catch (error) {
-    console.error('Error al registrar el usuario:', error)
-    res.status(500).json({ message: 'Error del servidor' })
+    console.error('Error en el registro:', error)
+    res.status(500).json({ message: 'Error en el registro' })
   }
 }
-const loginUser = async (req, res) => {
+
+const login = async (req, res) => {
   const { email, password } = req.body
-
-  console.log('Intento de login:', { email, password })
-
   try {
     const user = await User.findOne({ email })
-    if (!user) {
-      console.log('Usuario no encontrado:', email)
-      return res.status(400).json({ message: 'Credenciales incorrectas' })
-    }
-
-    console.log('Usuario encontrado:', user)
+    if (!user) return res.status(404).json({ message: 'Usuario no encontrado' })
 
     const isMatch = await bcrypt.compare(password, user.password)
-    if (!isMatch) {
-      console.log('Contraseña incorrecta para:', email)
+    if (!isMatch)
       return res.status(400).json({ message: 'Credenciales incorrectas' })
-    }
 
-    console.log('Login exitoso para:', user)
-    res.status(200).json({ message: 'Inicio de sesión exitoso', user })
+    const token = generateToken(user._id)
+    res.status(200).json({ token })
   } catch (error) {
-    console.error('Error al iniciar sesión:', error)
-    res.status(500).json({ message: 'Error del servidor' })
+    console.error('Error en el inicio de sesión:', error)
+    res.status(500).json({ message: 'Error en el inicio de sesión' })
   }
 }
 
-module.exports = {
-  registerUser,
-  loginUser
-}
+module.exports = { register, login }

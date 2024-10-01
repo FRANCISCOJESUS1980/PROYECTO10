@@ -1,29 +1,37 @@
 const express = require('express')
 const mongoose = require('mongoose')
 const cors = require('cors')
+const helmet = require('helmet')
+const morgan = require('morgan')
+const rateLimit = require('express-rate-limit')
 const authRoutes = require('./api/auth/auth.routes')
 const eventRoutes = require('./api/events/events.routes')
+const errorHandler = require('./utils/errorHandler')
+const { connectDB } = require('./config/db')
 require('dotenv').config()
 
 const app = express()
+const PORT = process.env.PORT || 3000
 
+connectDB()
+
+app.use(helmet())
 app.use(cors())
+app.use(morgan('dev'))
 app.use(express.json())
-app.use('/uploads', express.static('uploads'))
+app.use(express.urlencoded({ extended: true }))
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100
+})
+app.use(limiter)
 
 app.use('/api/auth', authRoutes)
 app.use('/api/events', eventRoutes)
 
-mongoose
-  .connect(process.env.DB_URL)
-  .then(() => {
-    console.log('Conectado a MongoDB')
-  })
-  .catch((err) => {
-    console.error('Error de conexión a MongoDB:', err)
-  })
+app.use(errorHandler)
 
-const PORT = process.env.PORT || 3000
 app.listen(PORT, () => {
   console.log(`Servidor escuchando en el puerto ${PORT}`)
 })
