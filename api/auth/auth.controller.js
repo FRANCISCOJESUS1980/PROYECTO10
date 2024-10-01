@@ -1,41 +1,61 @@
 const User = require('../../models/User')
-const jwt = require('jsonwebtoken')
+const bcrypt = require('bcryptjs')
 
-exports.register = async (req, res) => {
-  const { email, password, name } = req.body
+const registerUser = async (req, res) => {
+  const { name, email, password } = req.body
+
+  console.log('Datos recibidos para registro:', req.body)
+
+  if (!name || !email || !password) {
+    return res.status(400).json({ message: 'Todos los campos son requeridos' })
+  }
 
   try {
-    let user = await User.findOne({ email })
-    if (user) return res.status(400).json({ message: 'Usuario ya registrado' })
+    const userExists = await User.findOne({ email })
+    if (userExists) {
+      console.log('El usuario ya existe:', email)
+      return res.status(400).json({ message: 'El usuario ya existe' })
+    }
 
-    user = new User({ name, email, password })
+    const user = new User({ name, email, password })
     await user.save()
 
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-      expiresIn: '1h'
-    })
-    return res.status(201).json({ token })
+    console.log('Usuario registrado exitosamente:', user)
+    res.status(201).json({ message: 'Usuario registrado exitosamente' })
   } catch (error) {
-    return res.status(500).json({ message: 'Error en el registro' })
+    console.error('Error al registrar el usuario:', error)
+    res.status(500).json({ message: 'Error del servidor' })
   }
 }
-
-exports.login = async (req, res) => {
+const loginUser = async (req, res) => {
   const { email, password } = req.body
+
+  console.log('Intento de login:', { email, password })
 
   try {
     const user = await User.findOne({ email })
-    if (!user) return res.status(400).json({ message: 'Usuario no encontrado' })
+    if (!user) {
+      console.log('Usuario no encontrado:', email)
+      return res.status(400).json({ message: 'Credenciales incorrectas' })
+    }
 
-    const isMatch = await user.matchPassword(password)
-    if (!isMatch)
-      return res.status(400).json({ message: 'Contraseña incorrecta' })
+    console.log('Usuario encontrado:', user)
 
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-      expiresIn: '1h'
-    })
-    return res.status(200).json({ token })
+    const isMatch = await bcrypt.compare(password, user.password)
+    if (!isMatch) {
+      console.log('Contraseña incorrecta para:', email)
+      return res.status(400).json({ message: 'Credenciales incorrectas' })
+    }
+
+    console.log('Login exitoso para:', user)
+    res.status(200).json({ message: 'Inicio de sesión exitoso', user })
   } catch (error) {
-    return res.status(500).json({ message: 'Error en el inicio de sesión' })
+    console.error('Error al iniciar sesión:', error)
+    res.status(500).json({ message: 'Error del servidor' })
   }
+}
+
+module.exports = {
+  registerUser,
+  loginUser
 }
