@@ -29,7 +29,7 @@ const limiter = rateLimit({
 app.use(limiter)
 
 app.use('/api/auth', authRoutes)
-app.use('/api/events', authMiddleware, eventRoutes)
+app.use('/api/events', eventRoutes)
 
 app.use(errorHandler)
 
