@@ -1,4 +1,5 @@
 const { verifyToken } = require('../utils/tokenUtils')
+const { handleError } = require('../utils/errorHandler')
 
 const authMiddleware = (req, res, next) => {
   const authHeader = req.headers.authorization
@@ -23,6 +24,7 @@ const authMiddleware = (req, res, next) => {
     next()
   } catch (error) {
     console.error('Error en authMiddleware:', error.message)
+
     return res.status(401).json({ message: 'Token inválido o ha expirado.' })
   }
 }

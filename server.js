@@ -8,6 +8,7 @@ const authRoutes = require('./api/auth/auth.routes')
 const eventRoutes = require('./api/events/events.routes')
 const errorHandler = require('./utils/errorHandler')
 const { connectDB } = require('./config/db')
+const authMiddleware = require('./middleware/authMiddleware')
 require('dotenv').config()
 
 const app = express()
@@ -28,7 +29,7 @@ const limiter = rateLimit({
 app.use(limiter)
 
 app.use('/api/auth', authRoutes)
-app.use('/api/events', eventRoutes)
+app.use('/api/events', authMiddleware, eventRoutes)
 
 app.use(errorHandler)
 

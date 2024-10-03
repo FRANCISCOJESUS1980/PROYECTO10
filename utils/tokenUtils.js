@@ -2,8 +2,7 @@ const jwt = require('jsonwebtoken')
 const secretKey = process.env.JWT_SECRET || 'defaultSecretKey'
 
 const generateToken = (userId) => {
-  const payload = { id: userId }
-  return jwt.sign(payload, secretKey, { expiresIn: '2h' })
+  return jwt.sign({ id: userId }, secretKey, { expiresIn: '2h' })
 }
 
 const verifyToken = (token) => {
@@ -14,4 +13,4 @@ const verifyToken = (token) => {
   }
 }
 
-module.exports = { verifyToken, generateToken }
+module.exports = { generateToken, verifyToken }
