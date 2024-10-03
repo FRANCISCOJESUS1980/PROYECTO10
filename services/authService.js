@@ -26,8 +26,7 @@ const loginUser = async (email, password) => {
   const isMatch = await bcrypt.compare(password, user.password)
   if (!isMatch) throw new Error('Credenciales incorrectas')
 
-  const token = generateToken(user._id)
-  return token
+  return user
 }
 
 module.exports = { registerUser, loginUser }

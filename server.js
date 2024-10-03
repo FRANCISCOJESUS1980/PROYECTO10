@@ -8,13 +8,29 @@ const authRoutes = require('./api/auth/auth.routes')
 const eventRoutes = require('./api/events/events.routes')
 const errorHandler = require('./utils/errorHandler')
 const { connectDB } = require('./config/db')
-const authMiddleware = require('./middleware/authMiddleware')
+const swaggerJsDoc = require('swagger-jsdoc')
+const swaggerUi = require('swagger-ui-express')
 require('dotenv').config()
 
 const app = express()
 const PORT = process.env.PORT || 3000
 
 connectDB()
+
+const swaggerOptions = {
+  swaggerDefinition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'Event Management API',
+      version: '1.0.0',
+      description: 'API for managing events and attendees'
+    }
+  },
+  apis: ['./api/**/*.js']
+}
+
+const swaggerDocs = swaggerJsDoc(swaggerOptions)
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs))
 
 app.use(helmet())
 app.use(cors())

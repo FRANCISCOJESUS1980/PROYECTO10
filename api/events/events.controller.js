@@ -1,5 +1,6 @@
 const Event = require('../../models/Event')
 const Joi = require('joi')
+const { handleError } = require('../../utils/errorHandler')
 
 const eventSchema = Joi.object({
   title: Joi.string().min(3).required(),
@@ -8,12 +9,50 @@ const eventSchema = Joi.object({
   description: Joi.string().optional()
 })
 
+/**
+ * @swagger
+ * /api/events:
+ *   post:
+ *     summary: Create a new event
+ *     description: Create an event with the given details
+ *     tags: [Events]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               date:
+ *                 type: string
+ *                 format: date-time
+ *               location:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Event created successfully
+ *       400:
+ *         description: Invalid input
+ *       500:
+ *         description: Server error
+ */
 const createEvent = async (req, res) => {
   const { error } = eventSchema.validate(req.body)
   if (error) return res.status(400).json({ message: error.details[0].message })
 
   const { title, date, location, description } = req.body
   const userId = req.userId
+  console.log('ID de usuario en createEvent:', userId)
+
+  if (!userId) {
+    return res
+      .status(400)
+      .json({ message: 'Se requiere un usuario para crear el evento.' })
+  }
 
   try {
     const newEvent = new Event({
@@ -31,6 +70,19 @@ const createEvent = async (req, res) => {
   }
 }
 
+/**
+ * @swagger
+ * /api/events:
+ *   get:
+ *     summary: Get all events
+ *     description: Retrieve a list of all events
+ *     tags: [Events]
+ *     responses:
+ *       200:
+ *         description: List of events
+ *       500:
+ *         description: Server error
+ */
 const getEvents = async (req, res) => {
   try {
     const events = await Event.find()
@@ -41,6 +93,28 @@ const getEvents = async (req, res) => {
   }
 }
 
+/**
+ * @swagger
+ * /api/events/{id}:
+ *   get:
+ *     summary: Get an event by ID
+ *     description: Retrieve an event by its ID
+ *     tags: [Events]
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: ID of the event
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Event details
+ *       404:
+ *         description: Event not found
+ *       500:
+ *         description: Server error
+ */
 const getEventById = async (req, res) => {
   const { id } = req.params
   try {
@@ -56,6 +130,28 @@ const getEventById = async (req, res) => {
   }
 }
 
+/**
+ * @swagger
+ * /api/events/{eventId}/attend:
+ *   post:
+ *     summary: Confirm attendance to an event
+ *     description: Add a user as an attendee to an event
+ *     tags: [Events]
+ *     parameters:
+ *       - name: eventId
+ *         in: path
+ *         required: true
+ *         description: ID of the event
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Attendance confirmed
+ *       404:
+ *         description: Event not found
+ *       500:
+ *         description: Server error
+ */
 const confirmAttendance = async (req, res) => {
   const { eventId } = req.params
   const userId = req.userId
@@ -76,6 +172,30 @@ const confirmAttendance = async (req, res) => {
   }
 }
 
+/**
+ * @swagger
+ * /api/events/{id}:
+ *   delete:
+ *     summary: Delete an event
+ *     description: Delete an event by its ID
+ *     tags: [Events]
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: ID of the event
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Event deleted successfully
+ *       403:
+ *         description: You do not have permission to delete this event
+ *       404:
+ *         description: Event not found
+ *       500:
+ *         description: Server error
+ */
 const deleteEvent = async (req, res) => {
   const { id } = req.params
   const userId = req.userId

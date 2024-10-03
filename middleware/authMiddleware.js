@@ -3,6 +3,7 @@ const { handleError } = require('../utils/errorHandler')
 
 const authMiddleware = (req, res, next) => {
   const authHeader = req.headers.authorization
+  console.log('Encabezado de autorización completo:', authHeader)
 
   if (!authHeader) {
     return res
@@ -11,6 +12,7 @@ const authMiddleware = (req, res, next) => {
   }
 
   const token = authHeader.split(' ')[1]
+  console.log('Token recibido en el middleware:', token)
 
   if (!token) {
     return res
@@ -20,7 +22,9 @@ const authMiddleware = (req, res, next) => {
 
   try {
     const decoded = verifyToken(token)
+    console.log('Datos decodificados del token:', decoded)
     req.userId = decoded.id
+    console.log('ID de usuario asignado por el middleware:', req.userId)
     next()
   } catch (error) {
     console.error('Error en authMiddleware:', error.message)

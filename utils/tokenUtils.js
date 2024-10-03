@@ -2,14 +2,26 @@ const jwt = require('jsonwebtoken')
 const secretKey = process.env.JWT_SECRET || 'defaultSecretKey'
 
 const generateToken = (userId) => {
-  return jwt.sign({ id: userId }, secretKey, { expiresIn: '2h' })
+  const payload = {
+    id: userId
+  }
+  const options = {
+    expiresIn: '2h'
+  }
+  return jwt.sign(payload, secretKey, options)
 }
 
 const verifyToken = (token) => {
   try {
     return jwt.verify(token, secretKey)
   } catch (error) {
-    throw new Error('Token inválido o ha expirado.')
+    if (error instanceof jwt.JsonWebTokenError) {
+      throw new Error('Token inválido.')
+    }
+    if (error instanceof jwt.TokenExpiredError) {
+      throw new Error('Token ha expirado.')
+    }
+    throw new Error('Error al verificar el token.')
   }
 }
 
