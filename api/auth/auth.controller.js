@@ -3,7 +3,7 @@ const { registerUser, loginUser } = require('../../services/authService')
 const { handleError } = require('../../utils/errorHandler')
 const { validationResult } = require('express-validator')
 const User = require('../../models/User')
-
+/*
 const getAllUsers = async (req, res) => {
   try {
     const users = await User.find()
@@ -12,7 +12,7 @@ const getAllUsers = async (req, res) => {
     console.error('Error al obtener usuarios:', error)
     res.status(500).json({ message: 'Error al obtener usuarios' })
   }
-}
+}*/
 
 /**
  * @swagger
@@ -104,4 +104,4 @@ const login = async (req, res) => {
   }
 }
 
-module.exports = { register, login, getAllUsers }
+module.exports = { register, login }

@@ -9,7 +9,7 @@ const {
   deleteEvent
 } = require('./events.controller')
 const authMiddleware = require('../../middleware/authMiddleware')
-/*
+
 const eventValidationRules = () => {
   return [
     body('title').notEmpty().withMessage('El título es obligatorio'),
@@ -18,8 +18,8 @@ const eventValidationRules = () => {
     body('description').notEmpty().withMessage('La descripción es obligatoria')
   ]
 }
-*/
-router.post('/', authMiddleware, createEvent)
+
+router.post('/events', authMiddleware, createEvent)
 
 router.get('/', getEvents)
 router.get('/:id', getEventById)

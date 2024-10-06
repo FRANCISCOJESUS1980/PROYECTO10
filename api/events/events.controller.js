@@ -153,24 +153,43 @@ const getEventById = async (req, res) => {
  *         description: Server error
  */
 const confirmAttendance = async (req, res) => {
-  const { eventId } = req.params
-  const userId = req.userId
-
   try {
-    const event = await Event.findById(eventId)
-    if (!event) return res.status(404).json({ message: 'Evento no encontrado' })
+    const userId = req.userId
+    const eventId = req.params.eventId
 
-    if (!event.attendees.includes(userId)) {
-      event.attendees.push(userId)
-      await event.save()
+    console.log('ID de usuario en confirmAttendance:', userId)
+    console.log('ID de evento recibido:', eventId)
+
+    if (!userId) {
+      return res
+        .status(400)
+        .json({ message: 'No se ha proporcionado un usuario válido.' })
     }
 
-    res.status(200).json({ message: 'Asistencia confirmada', event })
+    const event = await Event.findById(eventId)
+
+    if (!event) {
+      return res.status(404).json({ message: 'Evento no encontrado.' })
+    }
+
+    if (event.attendees.includes(userId)) {
+      return res
+        .status(400)
+        .json({ message: 'Ya has confirmado asistencia a este evento.' })
+    }
+
+    event.attendees.push(userId)
+
+    await Event.updateOne({ _id: eventId }, { $push: { attendees: userId } })
+
+    res.status(200).json({ message: 'Asistencia confirmada al evento.' })
   } catch (error) {
     console.error('Error al confirmar asistencia:', error)
-    res.status(500).json({ message: 'Error al confirmar asistencia' })
+    res.status(500).json({ message: 'Error al confirmar asistencia.' })
   }
 }
+
+module.exports = { confirmAttendance }
 
 /**
  * @swagger
