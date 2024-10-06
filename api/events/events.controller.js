@@ -1,6 +1,7 @@
 const Event = require('../../models/Event')
 const Joi = require('joi')
 const { handleError } = require('../../utils/errorHandler')
+const cloudinary = require('../../config/cloudinary')
 
 const eventSchema = Joi.object({
   title: Joi.string().min(3).required(),
@@ -42,11 +43,16 @@ const eventSchema = Joi.object({
  */
 const createEvent = async (req, res) => {
   const { error } = eventSchema.validate(req.body)
-  if (error) return res.status(400).json({ message: error.details[0].message })
+  if (error) {
+    console.log('Error en la validación del esquema:', error.details[0].message)
+    return res.status(400).json({ message: error.details[0].message })
+  }
 
   const { title, date, location, description } = req.body
   const userId = req.userId
+
   console.log('ID de usuario en createEvent:', userId)
+  console.log('Archivo recibido:', req.file)
 
   if (!userId) {
     return res
@@ -55,18 +61,31 @@ const createEvent = async (req, res) => {
   }
 
   try {
+    if (!req.file) {
+      console.log(
+        'No se recibió un archivo. Asegúrate de que la solicitud incluya una imagen.'
+      )
+      return res.status(400).json({ message: 'La imagen es obligatoria.' })
+    }
+
+    const imageUrl = req.file ? req.file.path : null
+
     const newEvent = new Event({
       title,
       date,
       location,
       description,
-      creator: userId
+      imageUrl,
+      creator: req.userId
     })
+
     await newEvent.save()
     res.status(201).json({ message: 'Evento creado', event: newEvent })
   } catch (error) {
     console.error('Error al crear el evento:', error)
-    res.status(500).json({ message: 'Error al crear el evento' })
+    res
+      .status(500)
+      .json({ message: 'Error al crear el evento', error: error.message })
   }
 }
 

@@ -1,3 +1,4 @@
+require('dotenv').config()
 const express = require('express')
 const mongoose = require('mongoose')
 const cors = require('cors')
@@ -10,7 +11,9 @@ const errorHandler = require('./utils/errorHandler')
 const { connectDB } = require('./config/db')
 const swaggerJsDoc = require('swagger-jsdoc')
 const swaggerUi = require('swagger-ui-express')
-require('dotenv').config()
+const authMiddleware = require('./middleware/authMiddleware')
+
+const upload = require('./upload')
 
 const app = express()
 const PORT = process.env.PORT || 3000
@@ -46,8 +49,24 @@ app.use(limiter)
 
 app.use('/api/auth', authRoutes)
 app.use('/api/events', eventRoutes)
-
+app.use('/api', eventRoutes)
 app.use(errorHandler)
+
+app.post('/api/events', upload.single('image'), (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No se ha subido ningún archivo' })
+    }
+
+    res.status(201).json({
+      message: 'Archivo subido correctamente',
+      file: req.file
+    })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ message: 'Ocurrió un error en el servidor.' })
+  }
+})
 
 app.listen(PORT, () => {
   console.log(`Servidor escuchando en el puerto ${PORT}`)

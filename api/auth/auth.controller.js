@@ -3,6 +3,7 @@ const { registerUser, loginUser } = require('../../services/authService')
 const { handleError } = require('../../utils/errorHandler')
 const { validationResult } = require('express-validator')
 const User = require('../../models/User')
+const { registerValidation } = require('../../middleware/registerValidation')
 /*
 const getAllUsers = async (req, res) => {
   try {
