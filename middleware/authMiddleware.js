@@ -1,11 +1,10 @@
-const { verifyToken } = require('../utils/tokenUtils')
-const { handleError } = require('../utils/errorHandler')
+const jwt = require('jsonwebtoken')
+const User = require('../models/User')
 
-const authMiddleware = (req, res, next) => {
+const authMiddleware = async (req, res, next) => {
   const authHeader = req.headers.authorization
-  console.log('Encabezado de autorización completo:', authHeader)
 
-  if (!authHeader) {
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res
       .status(401)
       .json({ message: 'Acceso no autorizado, falta token.' })
@@ -21,10 +20,22 @@ const authMiddleware = (req, res, next) => {
   }
 
   try {
-    const decoded = verifyToken(token)
+    const decoded = jwt.verify(token, process.env.JWT_SECRET)
     console.log('Datos decodificados del token:', decoded)
-    req.userId = decoded.id
-    console.log('ID de usuario asignado por el middleware:', req.userId)
+
+    const user = await User.findById(decoded.id)
+
+    if (!user) {
+      return res
+        .status(401)
+        .json({
+          message: 'Usuario no autorizado, no se encontró en la base de datos.'
+        })
+    }
+
+    req.user = user
+    console.log('ID de usuario asignado por el middleware:', user.id)
+
     next()
   } catch (error) {
     console.error('Error en authMiddleware:', error.message)
