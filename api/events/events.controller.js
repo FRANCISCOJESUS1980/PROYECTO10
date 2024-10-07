@@ -67,8 +67,12 @@ const createEvent = async (req, res) => {
       )
       return res.status(400).json({ message: 'La imagen es obligatoria.' })
     }
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      collection: 'events',
+      resource_type: 'image'
+    })
 
-    const imageUrl = req.file ? req.file.path : null
+    const imageUrl = result.secure_url
 
     const newEvent = new Event({
       title,
