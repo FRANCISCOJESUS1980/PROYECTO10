@@ -52,11 +52,10 @@ const createEvent = async (req, res) => {
   const userId = req.userId
 
   console.log('ID de usuario en createEvent:', userId)
-  console.log('Archivo recibido:', req.file)
 
   if (!userId) {
     return res
-      .status(400)
+      .status(401)
       .json({ message: 'Se requiere un usuario para crear el evento.' })
   }
 
@@ -67,6 +66,7 @@ const createEvent = async (req, res) => {
       )
       return res.status(400).json({ message: 'La imagen es obligatoria.' })
     }
+
     const result = await cloudinary.uploader.upload(req.file.path, {
       collection: 'events',
       resource_type: 'image'
@@ -80,7 +80,7 @@ const createEvent = async (req, res) => {
       location,
       description,
       imageUrl,
-      creator: req.userId
+      creator: userId
     })
 
     await newEvent.save()
@@ -242,6 +242,12 @@ const deleteEvent = async (req, res) => {
   try {
     const event = await Event.findById(id)
     if (!event) return res.status(404).json({ message: 'Evento no encontrado' })
+
+    if (!event.creator) {
+      return res
+        .status(400)
+        .json({ message: 'Este evento no tiene un creador asociado.' })
+    }
 
     if (event.creator.toString() !== userId) {
       return res

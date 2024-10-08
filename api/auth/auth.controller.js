@@ -98,10 +98,10 @@ const login = async (req, res) => {
   try {
     const user = await loginUser(email, password)
     const token = generateToken(user._id)
-    res.status(201).json({ message: 'Usuario creado y autenticado', token })
+    res.status(201).json({ message: 'inicio de sesion correcta', token })
   } catch (error) {
-    console.error('Error al registrar usuario:', error)
-    handleError(res, error, 'Error en el registro')
+    console.error('Error al iniciar sesion:', error)
+    handleError(res, error, 'Error en el inicio de la sesion')
   }
 }
 

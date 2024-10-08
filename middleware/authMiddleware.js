@@ -34,12 +34,12 @@ const authMiddleware = async (req, res, next) => {
     }
 
     req.user = user
+    req.userId = user.id
     console.log('ID de usuario asignado por el middleware:', user.id)
 
     next()
   } catch (error) {
     console.error('Error en authMiddleware:', error.message)
-
     return res.status(401).json({ message: 'Token inválido o ha expirado.' })
   }
 }
