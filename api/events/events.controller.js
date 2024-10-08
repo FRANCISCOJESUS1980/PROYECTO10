@@ -1,6 +1,5 @@
 const Event = require('../../models/Event')
 const Joi = require('joi')
-const { handleError } = require('../../utils/errorHandler')
 const cloudinary = require('../../config/cloudinary')
 
 const eventSchema = Joi.object({
@@ -52,44 +51,47 @@ const createEvent = async (req, res) => {
   const userId = req.userId
 
   console.log('ID de usuario en createEvent:', userId)
+  console.log('Archivo recibido:', req.file)
 
   if (!userId) {
     return res
-      .status(401)
+      .status(400)
       .json({ message: 'Se requiere un usuario para crear el evento.' })
   }
 
+  if (!req.file) {
+    return res.status(400).json({ message: 'Se requiere una imagen.' })
+  }
+
   try {
-    if (!req.file) {
-      console.log(
-        'No se recibió un archivo. Asegúrate de que la solicitud incluya una imagen.'
-      )
-      return res.status(400).json({ message: 'La imagen es obligatoria.' })
-    }
+    const result = await cloudinary.uploader.upload_stream(
+      { resource_type: 'image' },
+      async (error, result) => {
+        if (error) {
+          console.error('Error al subir la imagen a Cloudinary:', error)
+          return res.status(500).json({ message: 'Error al subir la imagen.' })
+        }
 
-    const result = await cloudinary.uploader.upload(req.file.path, {
-      collection: 'events',
-      resource_type: 'image'
-    })
+        const newEvent = new Event({
+          title: title.toLowerCase(),
+          date,
+          location: location.toLowerCase(),
+          description,
+          imageUrl: result.secure_url,
+          creator: userId
+        })
 
-    const imageUrl = result.secure_url
+        await newEvent.save()
+        res
+          .status(201)
+          .json({ message: 'Evento creado correctamente', event: newEvent })
+      }
+    )
 
-    const newEvent = new Event({
-      title,
-      date,
-      location,
-      description,
-      imageUrl,
-      creator: userId
-    })
-
-    await newEvent.save()
-    res.status(201).json({ message: 'Evento creado', event: newEvent })
+    result.end(req.file.buffer)
   } catch (error) {
     console.error('Error al crear el evento:', error)
-    res
-      .status(500)
-      .json({ message: 'Error al crear el evento', error: error.message })
+    res.status(500).json({ message: 'Ocurrió un error en el servidor.' })
   }
 }
 

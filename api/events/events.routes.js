@@ -1,9 +1,6 @@
 const express = require('express')
-const { body } = require('express-validator')
 const router = express.Router()
-const cloudinary = require('../../config/cloudinary')
-const fs = require('fs')
-const Event = require('../../models/Event')
+const upload = require('../../upload')
 const {
   createEvent,
   getEvents,
@@ -13,65 +10,7 @@ const {
 } = require('./events.controller')
 const authMiddleware = require('../../middleware/authMiddleware')
 
-const multer = require('multer')
-const upload = require('../../upload')
-
-router.post(
-  '/events',
-  authMiddleware,
-  upload.single('image'),
-  async (req, res) => {
-    try {
-      const { title, date, location, description } = req.body
-      const userId = req.userId
-
-      if (!userId) {
-        return res
-          .status(401)
-          .json({ message: 'No autorizado. Usuario no autenticado.' })
-      }
-
-      const existingEvent = await Event.findOne({
-        title: title.toLowerCase(),
-        date,
-        location: location.toLowerCase()
-      })
-
-      if (existingEvent) {
-        return res.status(400).json({ message: 'El evento ya ha sido creado.' })
-      }
-
-      if (!title || !date || !location || !description) {
-        return res
-          .status(400)
-          .json({ message: 'Todos los campos son obligatorios.' })
-      }
-
-      const result = await cloudinary.uploader.upload(req.file.path, {
-        folder: 'events'
-      })
-
-      const newEvent = new Event({
-        title: title.toLowerCase(),
-        date,
-        location: location.toLowerCase(),
-        description,
-        imageUrl: result.secure_url,
-        creator: userId
-      })
-
-      await newEvent.save()
-      fs.unlinkSync(req.file.path)
-
-      res
-        .status(201)
-        .json({ message: 'Evento creado correctamente', event: newEvent })
-    } catch (error) {
-      console.error(error)
-      res.status(500).json({ message: 'Ocurrió un error en el servidor.' })
-    }
-  }
-)
+router.post('/events', authMiddleware, upload.single('image'), createEvent)
 
 router.get('/', getEvents)
 router.get('/:id', getEventById)

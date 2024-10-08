@@ -1,18 +1,9 @@
 const multer = require('multer')
-const path = require('path')
 const dotenv = require('dotenv')
 
 dotenv.config()
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadFolder = process.env.UPLOAD_FOLDER || 'uploads/'
-    cb(null, uploadFolder)
-  },
-  filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`)
-  }
-})
+const storage = multer.memoryStorage()
 
 const fileFilter = (req, file, cb) => {
   const allowedTypes = ['image/jpeg', 'image/png', 'image/gif']
