@@ -5,19 +5,13 @@ const authMiddleware = async (req, res, next) => {
   const authHeader = req.headers.authorization
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res
-      .status(401)
-      .json({ message: 'Acceso no autorizado, falta token.' })
+    return res.status(401).json({
+      message: 'Acceso no autorizado, falta o formato incorrecto del token.'
+    })
   }
 
   const token = authHeader.split(' ')[1]
   console.log('Token recibido en el middleware:', token)
-
-  if (!token) {
-    return res
-      .status(401)
-      .json({ message: 'Acceso no autorizado, token no proporcionado.' })
-  }
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET)
@@ -26,11 +20,9 @@ const authMiddleware = async (req, res, next) => {
     const user = await User.findById(decoded.id)
 
     if (!user) {
-      return res
-        .status(401)
-        .json({
-          message: 'Usuario no autorizado, no se encontró en la base de datos.'
-        })
+      return res.status(401).json({
+        message: 'Usuario no autorizado, no se encontró en la base de datos.'
+      })
     }
 
     req.user = user
@@ -40,7 +32,17 @@ const authMiddleware = async (req, res, next) => {
     next()
   } catch (error) {
     console.error('Error en authMiddleware:', error.message)
-    return res.status(401).json({ message: 'Token inválido o ha expirado.' })
+
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ message: 'Token expirado.' })
+    }
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({ message: 'Token inválido.' })
+    }
+
+    return res
+      .status(500)
+      .json({ message: 'Error interno del servidor al verificar el token.' })
   }
 }
 

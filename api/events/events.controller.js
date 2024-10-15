@@ -110,7 +110,7 @@ const createEvent = async (req, res) => {
  */
 const getEvents = async (req, res) => {
   try {
-    const events = await Event.find()
+    const events = await Event.find().lean()
     res.status(200).json(events)
   } catch (error) {
     console.error('Error al obtener eventos:', error)
@@ -212,6 +212,33 @@ const confirmAttendance = async (req, res) => {
     res.status(500).json({ message: 'Error al confirmar asistencia.' })
   }
 }
+const leaveEvent = async (req, res) => {
+  const eventId = req.params.eventId
+  const userId = req.userId
+
+  try {
+    const event = await Event.findById(eventId)
+    if (!event) {
+      return res.status(404).json({ message: 'Evento no encontrado.' })
+    }
+
+    if (!event.attendees.includes(userId)) {
+      return res
+        .status(400)
+        .json({ message: 'No estás registrado en este evento.' })
+    }
+
+    event.attendees = event.attendees.filter(
+      (attendee) => attendee.toString() !== userId
+    )
+    await event.save()
+
+    res.status(200).json({ message: 'Has salido del evento correctamente.' })
+  } catch (error) {
+    console.error('Error al salir del evento:', error)
+    res.status(500).json({ message: 'Error al salir del evento.' })
+  }
+}
 
 /**
  * @swagger
@@ -270,5 +297,6 @@ module.exports = {
   getEvents,
   getEventById,
   confirmAttendance,
-  deleteEvent
+  deleteEvent,
+  leaveEvent
 }

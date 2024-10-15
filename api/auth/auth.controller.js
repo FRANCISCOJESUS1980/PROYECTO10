@@ -4,16 +4,6 @@ const { handleError } = require('../../utils/errorHandler')
 const { validationResult } = require('express-validator')
 const User = require('../../models/User')
 const { registerValidation } = require('../../middleware/registerValidation')
-/*
-const getAllUsers = async (req, res) => {
-  try {
-    const users = await User.find()
-    res.status(200).json(users)
-  } catch (error) {
-    console.error('Error al obtener usuarios:', error)
-    res.status(500).json({ message: 'Error al obtener usuarios' })
-  }
-}*/
 
 /**
  * @swagger
@@ -48,8 +38,15 @@ const register = async (req, res) => {
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() })
   }
+
   const { username, email, password } = req.body
+
   try {
+    const existingUser = await User.findOne({ email })
+    if (existingUser) {
+      return res.status(400).json({ message: 'El correo ya está en uso.' })
+    }
+
     const user = await registerUser(username, email, password)
     console.log('Usuario registrado:', user)
     const token = generateToken(user._id)
@@ -98,10 +95,10 @@ const login = async (req, res) => {
   try {
     const user = await loginUser(email, password)
     const token = generateToken(user._id)
-    res.status(201).json({ message: 'inicio de sesion correcta', token })
+    res.status(200).json({ message: 'Inicio de sesión correcta', token })
   } catch (error) {
-    console.error('Error al iniciar sesion:', error)
-    handleError(res, error, 'Error en el inicio de la sesion')
+    console.error('Error al iniciar sesión:', error)
+    handleError(res, error, 'Error en el inicio de la sesión')
   }
 }
 

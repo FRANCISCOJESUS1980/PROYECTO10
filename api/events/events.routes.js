@@ -6,7 +6,8 @@ const {
   getEvents,
   getEventById,
   confirmAttendance,
-  deleteEvent
+  deleteEvent,
+  leaveEvent
 } = require('./events.controller')
 const authMiddleware = require('../../middleware/authMiddleware')
 
@@ -16,5 +17,6 @@ router.get('/', getEvents)
 router.get('/:id', getEventById)
 router.post('/:eventId/attend', authMiddleware, confirmAttendance)
 router.delete('/:id', authMiddleware, deleteEvent)
+router.post('/:eventId/leave', authMiddleware, leaveEvent)
 
 module.exports = router

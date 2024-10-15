@@ -7,12 +7,10 @@ const morgan = require('morgan')
 const rateLimit = require('express-rate-limit')
 const authRoutes = require('./api/auth/auth.routes')
 const eventRoutes = require('./api/events/events.routes')
-const errorHandler = require('./utils/errorHandler')
+const errorHandler = require('./utils/errorHandler').handleError
 const { connectDB } = require('./config/db')
 const swaggerJsDoc = require('swagger-jsdoc')
 const swaggerUi = require('swagger-ui-express')
-const authMiddleware = require('./middleware/authMiddleware')
-
 const upload = require('./upload')
 
 const app = express()
@@ -40,6 +38,7 @@ app.use(cors())
 app.use(morgan('dev'))
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
+app.use(express.static('public'))
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -49,8 +48,6 @@ app.use(limiter)
 
 app.use('/api/auth', authRoutes)
 app.use('/api/events', eventRoutes)
-app.use('/api', eventRoutes)
-app.use(errorHandler)
 
 app.post('/api/events', upload.single('image'), (req, res) => {
   try {
@@ -67,6 +64,8 @@ app.post('/api/events', upload.single('image'), (req, res) => {
     res.status(500).json({ message: 'Ocurrió un error en el servidor.' })
   }
 })
+
+app.use(errorHandler)
 
 app.listen(PORT, () => {
   console.log(`Servidor escuchando en el puerto ${PORT}`)
