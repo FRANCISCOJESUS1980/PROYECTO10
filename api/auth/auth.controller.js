@@ -5,34 +5,6 @@ const { validationResult } = require('express-validator')
 const User = require('../../models/User')
 const { registerValidation } = require('../../middleware/registerValidation')
 
-/**
- * @swagger
- * /api/auth/register:
- *   post:
- *     summary: Register a new user
- *     description: Create a new user and return a token
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               username:
- *                 type: string
- *               email:
- *                 type: string
- *               password:
- *                 type: string
- *     responses:
- *       201:
- *         description: User created and authenticated
- *       400:
- *         description: Invalid input
- *       500:
- *         description: Server error
- */
 const register = async (req, res) => {
   const errors = validationResult(req)
   if (!errors.isEmpty()) {
@@ -57,34 +29,6 @@ const register = async (req, res) => {
   }
 }
 
-/**
- * @swagger
- * /api/auth/login:
- *   post:
- *     summary: Login a user
- *     description: Login and return a token
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               email:
- *                 type: string
- *               password:
- *                 type: string
- *     responses:
- *       200:
- *         description: Token returned
- *       404:
- *         description: User not found
- *       400:
- *         description: Invalid credentials
- *       500:
- *         description: Server error
- */
 const login = async (req, res) => {
   const errors = validationResult(req)
   if (!errors.isEmpty()) {
