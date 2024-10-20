@@ -65,6 +65,19 @@ const createEvent = async (req, res) => {
       console.log('No se recibió archivo.')
       return res.status(400).json({ message: 'Se requiere una imagen.' })
     }
+    const existingEvent = await Event.findOne({
+      title: title.toLowerCase(),
+      date: new Date(date),
+      location: location.toLowerCase()
+    })
+
+    if (existingEvent) {
+      return res
+        .status(400)
+        .json({
+          message: 'Ya existe un evento con el mismo título, fecha y ubicación.'
+        })
+    }
 
     console.log('Subiendo imagen a Cloudinary...')
     const stream = cloudinary.uploader.upload_stream(
