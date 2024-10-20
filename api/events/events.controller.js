@@ -41,30 +41,33 @@ const eventSchema = Joi.object({
  *         description: Server error
  */
 const createEvent = async (req, res) => {
-  const { error } = eventSchema.validate(req.body)
-  if (error) {
-    console.log('Error en la validación del esquema:', error.details[0].message)
-    return res.status(400).json({ message: error.details[0].message })
-  }
-
-  const { title, date, location, description } = req.body
-  const userId = req.userId
-
-  console.log('ID de usuario en createEvent:', userId)
-  console.log('Archivo recibido:', req.file)
-
-  if (!userId) {
-    return res
-      .status(400)
-      .json({ message: 'Se requiere un usuario para crear el evento.' })
-  }
-
-  if (!req.file) {
-    return res.status(400).json({ message: 'Se requiere una imagen.' })
-  }
-
   try {
-    const result = await cloudinary.uploader.upload_stream(
+    const { error } = eventSchema.validate(req.body)
+    if (error) {
+      console.log(
+        'Error en la validación del esquema:',
+        error.details[0].message
+      )
+      return res.status(400).json({ message: error.details[0].message })
+    }
+
+    const { title, date, location, description } = req.body
+    const userId = req.userId
+
+    if (!userId) {
+      console.log('No hay usuario autenticado.')
+      return res
+        .status(400)
+        .json({ message: 'Se requiere un usuario para crear el evento.' })
+    }
+
+    if (!req.file) {
+      console.log('No se recibió archivo.')
+      return res.status(400).json({ message: 'Se requiere una imagen.' })
+    }
+
+    console.log('Subiendo imagen a Cloudinary...')
+    const stream = cloudinary.uploader.upload_stream(
       { resource_type: 'image' },
       async (error, result) => {
         if (error) {
@@ -82,15 +85,17 @@ const createEvent = async (req, res) => {
         })
 
         await newEvent.save()
-        res
+
+        console.log('Evento creado correctamente:', newEvent)
+        return res
           .status(201)
           .json({ message: 'Evento creado correctamente', event: newEvent })
       }
     )
 
-    result.end(req.file.buffer)
+    stream.end(req.file.buffer)
   } catch (error) {
-    console.error('Error al crear el evento:', error)
+    console.error('Error inesperado en el servidor:', error)
     res.status(500).json({ message: 'Ocurrió un error en el servidor.' })
   }
 }
@@ -110,7 +115,7 @@ const createEvent = async (req, res) => {
  */
 const getEvents = async (req, res) => {
   try {
-    const events = await Event.find().lean()
+    const events = await Event.find()
     res.status(200).json(events)
   } catch (error) {
     console.error('Error al obtener eventos:', error)

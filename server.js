@@ -12,7 +12,7 @@ const { connectDB } = require('./config/db')
 const swaggerJsDoc = require('swagger-jsdoc')
 const swaggerUi = require('swagger-ui-express')
 const upload = require('./upload')
-
+const bodyParser = require('body-parser')
 const app = express()
 const PORT = process.env.PORT || 3000
 
@@ -39,6 +39,10 @@ app.use(morgan('dev'))
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(express.static('public'))
+mongoose.connect(process.env.DB_URL, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+})
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -48,22 +52,6 @@ app.use(limiter)
 
 app.use('/api/auth', authRoutes)
 app.use('/api/events', eventRoutes)
-
-app.post('/api/events', upload.single('image'), (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ message: 'No se ha subido ningún archivo' })
-    }
-
-    res.status(201).json({
-      message: 'Archivo subido correctamente',
-      file: req.file
-    })
-  } catch (error) {
-    console.error(error)
-    res.status(500).json({ message: 'Ocurrió un error en el servidor.' })
-  }
-})
 
 app.use(errorHandler)
 

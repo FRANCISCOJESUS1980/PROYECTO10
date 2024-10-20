@@ -11,7 +11,7 @@ const {
 } = require('./events.controller')
 const authMiddleware = require('../../middleware/authMiddleware')
 
-router.post('/events', authMiddleware, upload.single('image'), createEvent)
+router.post('/', authMiddleware, upload.single('image'), createEvent)
 
 router.get('/', getEvents)
 router.get('/:id', getEventById)
