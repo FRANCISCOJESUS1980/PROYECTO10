@@ -10,6 +10,7 @@ const storage = new CloudinaryStorage({
       const ext = file.mimetype.split('/')[1]
       return ['jpeg', 'png', 'gif'].includes(ext) ? ext : 'jpeg'
     },
+    transformation: [{ fetch_format: 'webp', quality: 'auto:good' }],
     public_id: (req, file) => `${Date.now()}-${file.originalname}`
   }
 })
