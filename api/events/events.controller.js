@@ -1,6 +1,7 @@
 const Event = require('../../models/Event')
 const Joi = require('joi')
 const cloudinary = require('../../config/cloudinary')
+const { handleError } = require('../../utils/errorHandler')
 
 const eventSchema = Joi.object({
   title: Joi.string().min(3).required(),
@@ -60,6 +61,13 @@ const createEvent = async (req, res) => {
         .status(400)
         .json({ message: 'Se requiere un usuario para crear el evento.' })
     }
+    const currentDate = new Date()
+    if (new Date(date) < currentDate) {
+      console.log('La fecha del evento es anterior a la fecha actual.')
+      return res
+        .status(400)
+        .json({ message: 'La fecha no puede ser anterior a hoy.' })
+    }
 
     if (!req.file) {
       console.log('No se recibió archivo.')
@@ -72,11 +80,9 @@ const createEvent = async (req, res) => {
     })
 
     if (existingEvent) {
-      return res
-        .status(400)
-        .json({
-          message: 'Ya existe un evento con el mismo título, fecha y ubicación.'
-        })
+      return res.status(400).json({
+        message: 'Ya existe un evento con el mismo título, fecha y ubicación.'
+      })
     }
 
     console.log('Subiendo imagen a Cloudinary...')
