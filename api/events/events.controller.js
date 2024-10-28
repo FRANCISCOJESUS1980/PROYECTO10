@@ -66,7 +66,7 @@ const createEvent = async (req, res) => {
       console.log('La fecha del evento es anterior a la fecha actual.')
       return res
         .status(400)
-        .json({ message: 'La fecha no puede ser anterior a hoy.' })
+        .json({ message: 'La fecha no puede ser anterior ni igual a hoy.' })
     }
 
     if (!req.file) {
