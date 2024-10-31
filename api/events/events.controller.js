@@ -2,6 +2,7 @@ const Event = require('../../models/Event')
 const Joi = require('joi')
 const cloudinary = require('../../config/cloudinary')
 const { handleError } = require('../../utils/errorHandler')
+//const sendEmail = require ("../../utils/emailUtils")
 
 const eventSchema = Joi.object({
   title: Joi.string().min(3).required(),
@@ -206,6 +207,14 @@ const confirmAttendance = async (req, res) => {
     const eventId = req.params.eventId
     const userId = req.userId
 
+    /* await sendEmail(
+      user.email,
+      'Confirmación de asistencia',
+      `Has confirmado tu asistencia al evento: ${event.title}`
+    )
+
+    res.status(200).send({ message: 'Asistencia confirmada y correo enviado.' })*/
+
     console.log('ID de usuario en confirmAttendance:', userId)
     console.log('ID de evento recibido:', eventId)
 
@@ -242,6 +251,13 @@ const leaveEvent = async (req, res) => {
 
   try {
     const event = await Event.findById(eventId)
+    /*await sendEmail(
+      user.email,
+      'Cancelación de asistencia',
+      `Has cancelado tu asistencia al evento: ${event.title}`
+    )
+
+    res.status(200).send({ message: 'Asistencia cancelada y correo enviado.' })*/
     if (!event) {
       return res.status(404).json({ message: 'Evento no encontrado.' })
     }
@@ -315,6 +331,122 @@ const deleteEvent = async (req, res) => {
     res.status(500).json({ message: 'Error al eliminar el evento' })
   }
 }
+const updateEvent = async (req, res) => {
+  try {
+    const { id } = req.params
+    const userId = req.userId
+
+    const event = await Event.findById(id)
+    if (!event) {
+      return res.status(404).json({ message: 'Evento no encontrado' })
+    }
+
+    if (event.creator.toString() !== userId) {
+      return res
+        .status(403)
+        .json({ message: 'No tienes permisos para modificar este evento' })
+    }
+
+    const { title, date, location, description } = req.body
+    if (title) event.title = title.toLowerCase()
+    if (date) {
+      const parsedDate = new Date(date)
+      if (isNaN(parsedDate.getTime())) {
+        return res
+          .status(400)
+          .json({ message: 'El formato de la fecha es incorrecto.' })
+      }
+
+      const currentDate = new Date()
+      if (parsedDate < currentDate) {
+        return res
+          .status(400)
+          .json({ message: 'La fecha no puede ser anterior ni igual a hoy.' })
+      }
+      event.date = parsedDate
+    }
+    if (location) event.location = location.toLowerCase()
+    if (description) event.description = description
+
+    if (req.file) {
+      console.log('Actualizando imagen en Cloudinary...')
+      const stream = cloudinary.uploader.upload_stream(
+        { resource_type: 'image' },
+        async (error, result) => {
+          if (error) {
+            console.error('Error al subir la imagen a Cloudinary:', error)
+            return res
+              .status(500)
+              .json({ message: 'Error al subir la imagen.' })
+          }
+
+          event.imageUrl = result.secure_url
+
+          await event.save()
+
+          res
+            .status(200)
+            .json({ message: 'Evento actualizado correctamente', event })
+        }
+      )
+
+      stream.end(req.file.buffer)
+    } else {
+      await event.save()
+      res
+        .status(200)
+        .json({ message: 'Evento actualizado correctamente', event })
+    }
+  } catch (error) {
+    console.error('Error al actualizar evento:', error)
+    res
+      .status(500)
+      .json({ message: 'Ocurrió un error al actualizar el evento' })
+  }
+}
+
+/**
+ * @swagger
+ * /api/events/{id}:
+ *   put:
+ *     summary: Update an event
+ *     description: Modify an event's details. Only the creator can modify the event.
+ *     tags: [Events]
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: ID of the event to update
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               date:
+ *                 type: string
+ *                 format: date-time
+ *               location:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Event updated successfully
+ *       400:
+ *         description: Invalid input or past date
+ *       403:
+ *         description: You do not have permission to update this event
+ *       404:
+ *         description: Event not found
+ *       500:
+ *         description: Server error
+ */
 
 module.exports = {
   createEvent,
@@ -322,5 +454,6 @@ module.exports = {
   getEventById,
   confirmAttendance,
   deleteEvent,
-  leaveEvent
+  leaveEvent,
+  updateEvent
 }

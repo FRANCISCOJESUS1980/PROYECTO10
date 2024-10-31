@@ -34,17 +34,43 @@ const register = async (req, res) => {
 const login = async (req, res) => {
   const errors = validationResult(req)
   if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() })
+    const validationErrors = errors
+      .array()
+      .map((err) => err.msg)
+      .join(', ')
+    return res
+      .status(400)
+      .json({ message: `Errores de validación: ${validationErrors}` })
   }
 
   const { email, password } = req.body
   try {
     const user = await loginUser(email, password)
+
+    if (!user) {
+      return res.status(401).json({
+        message:
+          'Las credenciales son incorrectas. Verifica tu correo y contraseña.'
+      })
+    }
+
     const token = generateToken(user._id)
     res.status(200).json({ message: 'Inicio de sesión correcta', token })
   } catch (error) {
     console.error('Error al iniciar sesión:', error)
-    handleError(res, error, 'Error en el inicio de la sesión')
+
+    if (error.message.includes('password length')) {
+      res.status(400).json({
+        message:
+          'La longitud de la contraseña debe tener al menos 8 caracteres.'
+      })
+    } else if (error.message.includes('username length')) {
+      res.status(400).json({
+        message: 'El nombre de usuario debe tener al menos 3 caracteres.'
+      })
+    } else {
+      res.status(500).json({ message: 'Error en el inicio de la sesión' })
+    }
   }
 }
 
