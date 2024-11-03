@@ -2,7 +2,7 @@ const Event = require('../../models/Event')
 const Joi = require('joi')
 const cloudinary = require('../../config/cloudinary')
 const { handleError } = require('../../utils/errorHandler')
-//const sendEmail = require ("../../utils/emailUtils")
+//const sendEmail = require('../../utils/emailUtils')
 
 const eventSchema = Joi.object({
   title: Joi.string().min(3).required(),
@@ -207,7 +207,7 @@ const confirmAttendance = async (req, res) => {
     const eventId = req.params.eventId
     const userId = req.userId
 
-    /* await sendEmail(
+    /*await sendEmail(
       user.email,
       'Confirmación de asistencia',
       `Has confirmado tu asistencia al evento: ${event.title}`

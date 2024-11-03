@@ -83,19 +83,22 @@ const login = async (req, res) => {
 }
 
 const deleteUser = async (req, res) => {
-  const { userId } = req.params
+  const userId = req.userId
+  console.log(userId)
+  if (!userId) {
+    return res.status(400).json({ message: 'ID de usuario no encontrado' })
+  }
 
   try {
-    const user = await User.findById(userId)
+    const user = await User.findByIdAndDelete(userId)
     if (!user) {
       return res.status(404).json({ message: 'Usuario no encontrado' })
     }
 
-    await User.findByIdAndDelete(userId)
-    res.status(200).json({ message: 'Usuario eliminado correctamente' })
+    res.status(200).json({ message: 'Usuario eliminado exitosamente' })
   } catch (error) {
     console.error('Error al eliminar usuario:', error)
-    handleError(res, error, 'Error al eliminar el usuario')
+    res.status(500).json({ message: 'Error al eliminar el usuario' })
   }
 }
 
