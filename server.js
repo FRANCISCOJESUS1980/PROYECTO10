@@ -13,8 +13,20 @@ const swaggerJsDoc = require('swagger-jsdoc')
 const swaggerUi = require('swagger-ui-express')
 const upload = require('./upload')
 const bodyParser = require('body-parser')
+const cron = require('node-cron')
+const Event = require('./models/Event')
 const app = express()
 const PORT = process.env.PORT || 3000
+
+cron.schedule('0 0 * * *', async () => {
+  try {
+    const now = new Date()
+    const result = await Event.deleteMany({ date: { $lt: now } })
+    console.log(`Se eliminaron ${result.deletedCount} eventos antiguos.`)
+  } catch (error) {
+    console.error('Error eliminando eventos pasados:', error)
+  }
+})
 
 connectDB()
 

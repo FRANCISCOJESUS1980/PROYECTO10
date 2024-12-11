@@ -455,8 +455,6 @@ const Event = require('../../models/Event')
 const Joi = require('joi')
 const cloudinary = require('../../config/cloudinary')
 const { handleError } = require('../../utils/errorHandler')
-// const sendEmail = require('../../utils/emailUtils')
-// const User = require('../../models/User')
 
 const eventSchema = Joi.object({
   title: Joi.string().min(3).required(),
@@ -465,12 +463,6 @@ const eventSchema = Joi.object({
   description: Joi.string().optional()
 })
 
-/**
- * Centraliza la validación de entradas.
- * @param {Object} schema - El esquema Joi a validar.
- * @param {Object} data - Los datos a validar.
- * @returns {Object} - Mensaje de error si la validación falla.
- */
 const validateInput = (schema, data) => {
   const { error } = schema.validate(data)
   if (error) {
@@ -496,9 +488,9 @@ const createEvent = async (req, res) => {
     }
 
     if (new Date(date) <= new Date()) {
-      return res
-        .status(400)
-        .json({ message: 'La fecha debe ser posterior ni igual a la actual.' })
+      return res.status(400).json({
+        message: 'La fecha no puede ser posterior ni igual a la actual.'
+      })
     }
 
     if (!req.file) {
