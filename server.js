@@ -64,15 +64,12 @@ const rateLimit = require('express-rate-limit')
 const authRoutes = require('./api/auth/auth.routes')
 const eventRoutes = require('./api/events/events.routes')
 const { connectDB } = require('./config/db')
-const upload = require('./upload')
-const bodyParser = require('body-parser')
 const cron = require('node-cron')
 const Event = require('./models/Event')
 
 const app = express()
 const PORT = process.env.PORT || 3000
 
-// Cron para eliminar eventos antiguos
 cron.schedule('0 0 * * *', async () => {
   try {
     const now = new Date()
@@ -83,10 +80,8 @@ cron.schedule('0 0 * * *', async () => {
   }
 })
 
-// Conectar a la base de datos
 connectDB()
 
-// Configurar Helmet para permitir recursos de Vercel
 app.use(
   helmet({
     contentSecurityPolicy: {
@@ -117,7 +112,6 @@ const limiter = rateLimit({
 })
 app.use(limiter)
 
-// Rutas
 app.get('/', (req, res) => {
   res.send('Bienvenido a la API de Eventos')
 })
@@ -125,7 +119,6 @@ app.get('/', (req, res) => {
 app.use('/api/auth', authRoutes)
 app.use('/api/events', eventRoutes)
 
-// Manejador de errores
 app.use((err, req, res, next) => {
   console.error('Error no capturado:', err)
   res.status(500).json({ error: 'Internal Server Error', message: err.message })
