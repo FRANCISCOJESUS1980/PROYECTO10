@@ -9,10 +9,9 @@ const authRoutes = require('./api/auth/auth.routes')
 const eventRoutes = require('./api/events/events.routes')
 const errorHandler = require('./utils/errorHandler').handleError
 const { connectDB } = require('./config/db')
-const swaggerJsDoc = require('swagger-jsdoc')
-const swaggerUi = require('swagger-ui-express')
-const upload = require('./upload')
-const bodyParser = require('body-parser')
+
+//const upload = require('./upload')
+//const bodyParser = require('body-parser')
 const cron = require('node-cron')
 const Event = require('./models/Event')
 const app = express()
@@ -29,21 +28,6 @@ cron.schedule('0 0 * * *', async () => {
 })
 
 connectDB()
-
-const swaggerOptions = {
-  swaggerDefinition: {
-    openapi: '3.0.0',
-    info: {
-      title: 'Event Management API',
-      version: '1.0.0',
-      description: 'API for managing events and attendees'
-    }
-  },
-  apis: ['./api/**/*.js']
-}
-
-const swaggerDocs = swaggerJsDoc(swaggerOptions)
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs))
 
 app.use(helmet())
 app.use(cors())
