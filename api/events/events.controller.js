@@ -2,7 +2,6 @@ const Event = require('../../models/Event')
 const Joi = require('joi')
 const cloudinary = require('../../config/cloudinary')
 const { handleError } = require('../../utils/errorHandler')
-//const sendEmail = require('../../utils/emailUtils')
 
 const eventSchema = Joi.object({
   title: Joi.string().min(3).required(),
@@ -113,13 +112,7 @@ const confirmAttendance = async (req, res) => {
     const userId = req.userId
 
     const event = await Event.findById(eventId)
-    /* await sendEmail(
-      user.email,
-      'Confirmación de asistencia',
-      `Has confirmado tu asistencia al evento: ${event.title}`
-    )
 
-    res.status(200).send({ message: 'Asistencia confirmada y correo enviado.' })*/
     if (!event)
       return res.status(404).json({ message: 'Evento no encontrado.' })
 
@@ -220,13 +213,7 @@ const leaveEvent = async (req, res) => {
     const userId = req.userId
 
     const event = await Event.findById(eventId)
-    /* await sendEmail(
-      user.email,
-      'Cancelación de asistencia',
-      `Has cancelado tu asistencia al evento: ${event.title}`
-    )
 
-    res.status(200).send({ message: 'Asistencia cancelada y correo enviado.' })*/
     if (!event)
       return res.status(404).json({ message: 'Evento no encontrado.' })
 
