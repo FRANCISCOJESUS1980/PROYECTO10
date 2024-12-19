@@ -14,17 +14,17 @@ const Event = require('./models/Event')
 const app = express()
 const PORT = process.env.PORT || 3000
 
+connectDB()
 cron.schedule('0 0 * * *', async () => {
+  console.log('Tarea cron ejecutada a la medianoche')
   try {
-    const now = new Date()
+    const now = new Date().setHours(0, 0, 0, 0)
     const result = await Event.deleteMany({ date: { $lt: now } })
     console.log(`Se eliminaron ${result.deletedCount} eventos antiguos.`)
   } catch (error) {
     console.error('Error eliminando eventos pasados:', error)
   }
 })
-
-connectDB()
 
 app.use(
   helmet({
